@@ -9,7 +9,7 @@ python Server.py <server_port>
 ```
 
 <server_port> is a port to help Server create RTSP connecion.
-Standar for port is 554, but is this case, we need more large than 1024.<br>
+Standard for port is 554, but is this case, we need more large than 1024.<br>
 - Now, open a second terminal as a client side
 - Enter command below<br>
 ```python
