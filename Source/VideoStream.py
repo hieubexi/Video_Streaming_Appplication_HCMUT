@@ -11,7 +11,7 @@ class VideoStream:
 
 		print('frame = 0')
 
-	def get_total_time_video(self):
+	def getTotalTime(self):
 		self.totalFrame=0
 		while True:
 			data = self.file.read(5)
@@ -67,7 +67,6 @@ class VideoStream:
 			self.frameNum = 0
 			for i in range(fFrames):
 				data = self.nextFrame()
-
 		return data
 
 	def frameNbr(self):

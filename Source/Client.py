@@ -4,12 +4,10 @@ from PIL import Image, ImageTk
 import socket, threading, sys, traceback, os
 import time
 from RtpPacket import RtpPacket
-# background color for application
 
-color_bg = "#245953"
 CACHE_FILE_NAME = "cache-"
 CACHE_FILE_EXT = ".jpg"
-
+color_bg = "#245953"
 class Client:
 	INIT = 0 # beginning state
 	READY = 1 # ready state
@@ -85,9 +83,8 @@ class Client:
 				if i.find(CACHE_FILE_NAME) == 0:
 					os.remove(i)
 			time.sleep(1)
-			# reset state 
 			self.state = self.INIT
-			# reset all variable to default values
+			# self.master.protocol("WM_DELETE_WINDOW", self.handler)
 			self.rtspSeq = 0
 			self.sessionId = 0
 			self.requestSent = -1
@@ -120,23 +117,23 @@ class Client:
 		"""Listen for RTP packets."""
 		while True:
 			try:
-				data = self.rtpSocket.recv(20480) 
-				# 20480 for max data length
+				data = self.rtpSocket.recv(20480) # -> đọc tối đa 20480 bytes
 				if data:
 					rtpPacket = RtpPacket()
-					rtpPacket.decode(data) # decode the packet
+					rtpPacket.decode(data) # giải mã data
+					
 					currFrameNbr = rtpPacket.seqNum()
 					print("Current Seq Num: " + str(currFrameNbr))
+
 					try:
 						print(self.frameNbr +1,'--',rtpPacket.seqNum())
 						if self.frameNbr + 1 != rtpPacket.seqNum():
-							# packet lost flag
-							self.counter += 1 
+							self.counter += 1 #flag khi mất gói tin
 							print('!' * 60 + "\nPACKET LOSS\n" + '!' * 60)
-						currFrameNbr = rtpPacket.seqNum() 
+						currFrameNbr = rtpPacket.seqNum() # gán làm qq gì ?
 					# version = rtpPacket.version()
 					except:
-						print("seqNum() Error \n")
+						print("seqNum() Loi \n")
 						traceback.print_exc(file=sys.stdout)
 						print("\n")
 					if currFrameNbr > self.frameNbr: # Discard the late packet
@@ -160,6 +157,7 @@ class Client:
 		file = open(cachename, "wb")
 		file.write(data)
 		file.close()
+		
 		return cachename
 	
 	def updateMovie(self, imageFile):
@@ -177,57 +175,77 @@ class Client:
 			tkinter.messagebox.showwarning('Connection Failed', 'Connection to \'%s\' failed.' %self.serverAddr)
 	
 	def sendRtspRequest(self, requestCode):
-		"""Send RTSP request to the server."""	#	
+		"""Send RTSP request to the server."""	# -> Gửi Request tới server
+		#-------------
+		# TO COMPLETE
+		#-------------
+		
 		# Setup request
-		# if state = INIT when SETUP button is pressed -> send request SET UP
-		if requestCode == self.SETUP and self.state == self.INIT:
+		if requestCode == self.SETUP and self.state == self.INIT: # chưa làm gì hết !
 			threading.Thread(target=self.recvRtspReply).start()
 			# Update RTSP sequence number.
+			# ...
 			self.rtspSeq = self.rtspSeq + 1
 			# Write the RTSP request to be sent.
+			# request = ...
 			request = "SETUP %s RTSP/1.0\nCSeq: %d\nTRANSPORT: RTP/UDP; client_port= %d" % (self.fileName, self.rtspSeq, self.rtpPort)
+
 			# Keep track of the sent request.
+			# self.requestSent = ...
 			self.requestSent = self.SETUP
-		# If state = READY when PLAY button is pressed -> send request PLAY
 		# Play request
 		elif requestCode == self.PLAY and self.state == self.READY:
 			# Update RTSP sequence number.
+			# ...
 			self.rtspSeq = self.rtspSeq + 1
 			# Write the RTSP request to be sent.
+			# request = ...
 			request = "PLAY %s RTSP/1.0\nCSeq: %d\nSESSION: %d" % (self.fileName, self.rtspSeq, self.sessionId)
+			
 			# Keep track of the sent request.
+			# self.requestSent = ...
 			self.requestSent = self.PLAY
-		# If state = PLAYING when PAUSE button is pressed -> send PAUSE request
 		# Pause request
 		elif requestCode == self.PAUSE and self.state == self.PLAYING:
 			# Update RTSP sequence number.
+			# ...
 			self.rtspSeq = self.rtspSeq + 1
 			# Write the RTSP request to be sent.
-			request = "PAUSE %s RTSP/1.0\nCSeq: %d\nSESSION: %d" % (self.fileName, self.rtspSeq, self.sessionId)			
+			# request = ...
+			request = "PAUSE %s RTSP/1.0\nCSeq: %d\nSESSION: %d" % (self.fileName, self.rtspSeq, self.sessionId)
+			
 			# Keep track of the sent request.
+			# self.requestSent = ...
 			self.requestSent = self.PAUSE
-		# If state != INIT (or state = any of state left) when TEARDOWN button is pressed-> send TEARDOWN request
 		# Teardown request
 		elif requestCode == self.TEARDOWN and not self.state == self.INIT:
 			# Update RTSP sequence number.
+			# ...
 			self.rtspSeq = self.rtspSeq + 1
 			# Write the RTSP request to be sent.
+			# request = ...
 			request = "TEARDOWN %s RTSP/1.0\nCSeq: %d\nSESSION: %d" % (self.fileName, self.rtspSeq, self.sessionId)
+			
 			# Keep track of the sent request.
+			# self.requestSent = ...
 			self.requestSent = self.TEARDOWN
 		else:
 			return
-		# When you have RTSP request message already, now sent it to the server using rtspSocket.
+		
+		# Send the RTSP request using rtspSocket.
+		# ...
 		self.rtspSocket.send(request.encode())
-		print('\nRequest content:\n' + request)
+		print('\nDu lieu gui:\n' + request)
 	
 	def recvRtspReply(self):
-		"""Receive RTSP reply from the server.""" 
+		#print('Client: def recvRtspReply')
+		"""Receive RTSP reply from the server.""" # -> Nhận và thực thi cú pháp trả về từ server
 		while True:
 			reply = self.rtspSocket.recv(1024) # 1024 bytes
+			
 			if reply: 
-				# parse the rtsp reply from the server
 				self.parseRtspReply(reply.decode("utf-8"))
+			
 			# Close the RTSP socket upon requesting Teardown
 			if self.requestSent == self.TEARDOWN:
 				self.rtspSocket.shutdown(socket.SHUT_RDWR)
@@ -235,9 +253,10 @@ class Client:
 				break
 	
 	def parseRtspReply(self, data):
-		"""Parse the RTSP reply from the server."""
+		"""Parse the RTSP reply from the server.""" # -> phân tích cú pháp trả về từ server
 		lines = data.split('\n') # lines là list chứa các string trả về từ server
-		seqNum = int(lines[1].split(' ')[1])	
+		seqNum = int(lines[1].split(' ')[1])
+		
 		# Process only if the server reply's sequence number is the same as the request's
 		if seqNum == self.rtspSeq:
 			session = int(lines[2].split(' ')[1])
@@ -249,16 +268,22 @@ class Client:
 			if self.sessionId == session:
 				if int(lines[0].split(' ')[1]) == 200: 
 					if self.requestSent == self.SETUP:
+						#-------------
+						# TO COMPLETE
+						#-------------
 						# Update RTSP state.
+						# self.state = ...
 						self.state = self.READY
 						# Open RTP port.
 						self.openRtpPort() 
 					elif self.requestSent == self.PLAY:
+						# self.state = ...
 						self.state=self.PLAYING
 					elif self.requestSent == self.PAUSE:
+						# self.state = ...
 						self.state=self.READY
 						# The play thread exits. A new thread is created on resume.
-						self.playEvent.set()
+						self.playEvent.set() # tạm dừng thread lại
 
 					elif self.requestSent == self.TEARDOWN:
 						# self.state = ...
@@ -268,31 +293,34 @@ class Client:
 	
 	def openRtpPort(self):
 		"""Open RTP socket binded to a specified port."""
-		# Create a new data gram socket to receive RTP packets from the server
+		#-------------
+		# TO COMPLETE
+		#-------------
+		# Create a new datagram socket to receive RTP packets from the server
 		# self.rtpSocket = ...
 		self.checkSocketIsOpen = True
-		self.rtpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		# socket.AF_INET là dùng cho IPV4, socket.SOCK_DGRAM là dùng cho UDP
+		self.rtpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # socket.AF_INET là dùng cho IPV4, socket.SOCK_DGRAM là dùng cho UDP
 		#-> tạo ra 1 đối tượng socket dùng cho IPV4 và có giao thức UDP
 
 		# Set the timeout value of the socket to 0.5sec
+		# ...
 		self.rtpSocket.settimeout(0.5)
 		try:
 			# Bind the socket to the address using the RTP port given by the client user
+			# ...
 			self.state = self.READY
 			self.rtpSocket.bind(('', self.rtpPort))
 		except:
-			tkinter.messagebox.showwarning('Unable to Bind', 'Unable to bind PORT=%d' %self.rtpPort)
+			tkinter.messagebox.showwarning('Unable to Bind', 'Unable to bind PORT=%d' %self.rtpPort) # trong th nào ?
 
-	def handler(self): # press the X button
+	def handler(self): # khi bấm vào dấu X
 		"""Handler on explicitly closing the GUI window."""
 		self.pauseMovie()
 		if tkinter.messagebox.askokcancel("Quit?", "Are you sure you want to quit?"):
 			if self.state != self.TEARDOWN: self.sendRtspRequest(self.TEARDOWN)
 			if(self.checkSocketIsOpen):
-				self.rtpSocket.shutdown(socket.SHUT_RDWR) #shut down the socket 
+				self.rtpSocket.shutdown(socket.SHUT_RDWR)
 				self.rtpSocket.close()
 			self.master.destroy()  # Close the gui window
 			sys.exit(0)
-
 

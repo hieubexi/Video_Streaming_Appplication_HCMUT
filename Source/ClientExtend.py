@@ -1,5 +1,6 @@
 from tkinter import *
 import tkinter.messagebox
+import tkinter.font as font
 from PIL import Image, ImageTk
 import socket, threading, sys, traceback, os
 from RtpPacket import RtpPacket
@@ -59,7 +60,6 @@ class ClientExtend:
         self.packets = 0
         self.packetsLost = 0
         self.lastSequence = 0
-        self.totalJitter = 0
         self.arrivalTimeofPreviousPacket = 0
         self.lastPacketSpacing = 0
         
@@ -70,34 +70,38 @@ class ClientExtend:
         """Build GUI."""
         # Create Play button
         self.start = Button(self.master, width=15, padx=3, pady=3)
-        self.start["text"] = "Play ▶"
-        self.start["bg"] = "#56ff6d"
-        self.start["fg"] = "black"
+        self.start["text"] = "Play ▶️"
+        self.start["bg"] = "#41644A"
+        self.start["fg"] = "beige"
+        self.start['font'] = font.Font(size = 10)
         self.start["command"] = self.playMovie
         self.start.grid(row=2, column=0, padx=2, pady=2)
 
         # Create Pause button
         self.pause = Button(self.master, width=15, padx=3, pady=3)
-        self.pause["text"] = "Pause ⏸"
-        self.pause["bg"] = "#f8ed54"
-        self.pause["fg"] = "black"
+        self.pause["text"] = "Pause ⏸️ "
+        self.pause["bg"] = "#41644A"
+        self.pause["fg"] = "beige"
+        self.pause['font'] = font.Font(size = 10)
         self.pause["command"] = self.pauseMovie
         self.pause.grid(row=2, column=1, padx=2, pady=2)
 
         # Create Teardown button
-        self.stop = Button(self.master, width=15, padx=3, pady=3)
-        self.stop["text"] = "Stop ■"
-        self.stop["command"] = self.resetMovie
-        self.stop["bg"]= "#e05927"
-        self.stop["fg"] = "black"
-        self.stop.grid(row=2, column=2, padx=2, pady=2)
+        self.reset = Button(self.master, width=15, padx=3, pady=3)
+        self.reset["text"] = "Stop 🔄️"
+        self.reset["command"] = self.resetMovie
+        self.reset["bg"]= "#41644A"
+        self.reset["fg"] = "beige"
+        self.reset['font'] = font.Font(size = 10)
+        self.reset.grid(row=2, column=2, padx=2, pady=2)
 
         # Create Setup button
         self.describe = Button(self.master, width=15, padx=3, pady=3)
         self.describe["text"] = "Describe ★"
         self.describe["command"] = self.describeMovie
-        self.describe["bg"] = "#409dfa"
-        self.describe["fg"] = "black"
+        self.describe["bg"] = "#41644A"
+        self.describe["fg"] = "beige"
+        self.describe['font'] = font.Font(size = 10)
         self.describe["state"] = "disabled"
         self.describe.grid(row=2, column=3, padx=2, pady=2)
 
@@ -106,24 +110,24 @@ class ClientExtend:
         self.label.grid(row=0, column=0, columnspan=5, sticky=W + E + N + S, padx=5, pady=5)
 
         # Create a label to display total time of the movie
-        self.totaltimeBox = Label(self.master, width=16, text="Total time: 00:00", bg= "#A5D2EB")
-        self.totaltimeBox.grid(row=1, column=3, columnspan=1, padx=5, pady=5)
+        self.totalTimeBox = Label(self.master, width=16, text="Total time: 00:00", bg=color_bg , fg="beige")
+        self.totalTimeBox.grid(row=1, column=3, columnspan=1, padx=5, pady=5)
 
         # Create a label to display remaining time of the movie
 
-        self.remainTimeBox = Label(self.master, width=16, text="Remaining time: 00:00", bg="#A5D2EB")
+        self.remainTimeBox = Label(self.master, width=16, text="Time Left: 00:00", bg=color_bg ,  fg="beige")
         self.remainTimeBox.grid(row=1, column=0, columnspan=1, padx=5, pady=5)
 
         # Create forward button
-        self.forward = Button(self.master, width=15, padx=3, pady=3, bg= "#00EBC1", fg= "black")
-        self.forward["text"] = "⫸⫸"
+        self.forward = Button(self.master, width=15, padx=3, pady=3, bg= "#E96479", fg= "black")
+        self.forward["text"] = "⏩"
         self.forward["command"] = self.forwardMovies
         self.forward["state"] = "disabled"
         self.forward.grid(row=1, column=2, padx=2, sticky= E + W, pady=2)
 
         # Create backward button
-        self.backward = Button(self.master, width=15, padx=3, pady=3, bg= "#00EBC1", fg= "black")
-        self.backward["text"] = "⫷⫷"
+        self.backward = Button(self.master, width=15, padx=3, pady=3, bg= "#E96479", fg= "black")
+        self.backward["text"] = "⏪"
         self.backward["command"] = self.prevMovie
         self.backward["state"] = "disabled"
         self.backward.grid(row=1, column=1, sticky = E + W, padx=2, pady=2)
@@ -140,41 +144,38 @@ class ClientExtend:
             self.sendRtspRequest(self.SETUP)
 
     def resetMovie(self):
-        """Teardown button handler."""
-        if self.checkPlay:
-            self.checkPlay = False
-            self.sendRtspRequest(self.TEARDOWN)
-            try:
-                for i in os.listdir():
-                    if i.find(CACHE_FILE_NAME) == 0:
-                        os.remove(i)
-            except:
-                pass
-            time.sleep(1)
-            self.forward["state"] = "disabled"
-            self.backward["state"] = "disabled"
-            self.rtspSeq = 0
-            self.sessionId = 0
-            self.requestSent = -1
-            self.teardownAcked = 0
-            self.counter = 0
-            self.isFirstPlay = True
-            self.isForward = 0
-            self.isBackward = 0
-            self.currentTime = 0
-            # if not (self.checkSocketIsOpen):
-            self.connectToServer()
-            self.rtpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.label.pack_forget()
-            self.label.image = ''
-            # time.sleep(0.5)
-            # self.setupMovie()
+        """Stop button handler."""
+        """Handler on explicitly closing the GUI window."""
+        if tkinter.messagebox.askokcancel("You are pressing Stop button.", "This action will end your connection to the server"):
+            if self.checkPlay:
+                self.checkPlay = False
+                self.sendRtspRequest(self.TEARDOWN)
+                try:
+                    for i in os.listdir():
+                        if i.find(CACHE_FILE_NAME) == 0:
+                            os.remove(i)
+                except:
+                    pass
+                time.sleep(1)
+                self.forward["state"] = "disabled"
+                self.backward["state"] = "disabled"
+                self.rtspSeq = 0
+                self.sessionId = 0
+                self.requestSent = -1
+                self.teardownAcked = 0
+                self.counter = 0
+                self.isFirstPlay = True
+                self.isForward = 0
+                self.isBackward = 0
+                self.currentTime = 0
+                self.connectToServer()
+                self.rtpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self.label.pack_forget()
+                self.label.image = ''
 
     def pauseMovie(self):
         """Pause button handler."""
         if self.state == self.PLAYING:
-            self.forward["state"]= "disabled"
-            self.backward["state"] = "disabled"
             self.sendRtspRequest(self.PAUSE)
 
 
@@ -192,17 +193,14 @@ class ClientExtend:
             self.packets = 0
             self.packetsLost = 0
             self.lastSequence = 0
-            self.totalJitter = 0
             self.arrivalTimeofPreviousPacket = 0
             self.lastPacketSpacing = 0
             self.setupMovie()
             while self.state != self.READY:
                 pass
-
         self.forward["state"] = "normal"
         self.backward["state"] = "normal"
         self.describe["state"] = "normal"
-
         if self.state == self.READY:
             self.checkPlay = True
             # Create a new thread to listen for RTP packets
@@ -241,17 +239,17 @@ class ClientExtend:
                         if (self.frameNbr + 1 != rtpPacket.seqNum()) & (not(self.isForward | self.isBackward)):
                             print('count: ',self.counter)
                             self.counter += 1
-                            print('=' * 100 + "\n\nMat Goi\n\n" + '=' * 100)
+                            print('=' * 100 + "\n\nLoss Packet\n\n" + '=' * 100)
                         currFrameNbr = rtpPacket.seqNum()
                         self.currentTime = int(currFrameNbr * 0.05)
                         # Update remaining time
-                        self.totaltimeBox.configure(text="Total time: %02d:%02d" % (self.totalTime // 60, self.totalTime % 60))
-                        self.remainTimeBox.configure(text="Remaining time: %02d:%02d" % ((self.totalTime - self.currentTime)// 60, (self.totalTime - self.currentTime) % 60))
+                        self.totalTimeBox.configure(text="Total time: %02d:%02d" % (self.totalTime // 60, self.totalTime % 60))
+                        self.remainTimeBox.configure(text="Time left: %02d:%02d" % ((self.totalTime - self.currentTime)// 60, (self.totalTime - self.currentTime) % 60))
                     # version = rtpPacket.version()
 
 
                     except:
-                        print("seqNum() Loi \n")
+                        print("seqNum() Error \n")
                         traceback.print_exc(file=sys.stdout)
                         print("\n")
                     if currFrameNbr > self.frameNbr:  # Discard the late packet
@@ -261,25 +259,18 @@ class ClientExtend:
                         self.countTotalPacket += 1
                         self.packets += 1
                         self.packetsLost += currFrameNbr - self.lastSequence - 1
-                        # calculate total jitter
-                        if self.lastSequence == currFrameNbr - 1 and currFrameNbr > 1:
-                            interPacketSpacing = arrivalTimeOfPacket - self.arrivalTimeofPreviousPacket
-                            jitterIncrement = abs(interPacketSpacing - self.lastPacketSpacing)
-                            self.totalJitter = self.totalJitter + jitterIncrement
-                            self.lastPacketSpacing = interPacketSpacing
-
                         self.arrivalTimeofPreviousPacket = arrivalTimeOfPacket
                         self.lastSequence = currFrameNbr
             except:
                 # Stop listening upon requesting PAUSE or TEARDOWN
                 if self.playEvent.isSet():
-                    self.displayStats()
+                    self.displayStatus()
                     break
 
                 # Upon receiving ACK for TEARDOWN request,
                 # close the RTP socket
                 if self.teardownAcked == 1:
-                    self.displayStats()
+                    self.displayStatus()
                     self.checkSocketIsOpen = False
                     try:
                         self.rtpSocket.shutdown(socket.SHUT_RDWR)
@@ -331,13 +322,10 @@ class ClientExtend:
         # Play request
         elif requestCode == self.PLAY:  # and self.state == self.READY:
             # Update RTSP sequence number.
-            # ...
             self.rtspSeq = self.rtspSeq + 1
             # Write the RTSP request to be sent.
-            # request = ...
             request = "PLAY %s RTSP/1.0\nCSeq: %d\nSESSION: %d" % (self.fileName, self.rtspSeq, self.sessionId)
             # Keep track of the sent request.
-            # self.requestSent = ...
             self.requestSent = self.PLAY
         # Pause request
         elif requestCode == self.PAUSE:  # and self.state == self.PLAYING:
@@ -429,20 +417,16 @@ class ClientExtend:
                 if int(lines[0].split(' ')[1]) == 200:
                     if self.requestSent == self.SETUP:
                         # Update RTSP state.
-                        # self.state = ...
                         self.totalTime = float(lines[3].split(' ')[1])
                         self.state = self.READY
                         # Open RTP port.
                         self.openRtpPort()
                     elif self.requestSent == self.PLAY:
-                        # self.state = ...
                         self.state = self.PLAYING
-                        # start timer if not already playing
                         if self.timerBegin == 0:
                             self.timerBegin = time.perf_counter()
                             self.arrivalTimeofPreviousPacket = time.perf_counter()
                     elif self.requestSent == self.PAUSE:
-                        # self.state = ...
                         self.state = self.READY
                         # set timer when paused and playing previously
                         if self.timerBegin > 0:
@@ -452,7 +436,6 @@ class ClientExtend:
                         # The play thread exits. A new thread is created on resume.
                         self.playEvent.set()
                     elif self.requestSent == self.TEARDOWN:
-                        # self.state = ...
                         self.state = self.INIT
                         self.timerEnd = time.perf_counter()
                         # end timer
@@ -487,42 +470,40 @@ class ClientExtend:
             sys.exit(0)
 
 
+
     def displayDescription(self, lines):
         top = Toplevel()
         top.title("Description")
         top.geometry('300x180')
-        Lb1 = Listbox(top, width=50, height=30)
-        Lb1.insert(1, "Describe: ")
-        Lb1.insert(2, "Name Video: " + str(self.fileName))
-        Lb1.insert(3, lines[1])
-        Lb1.insert(4, lines[2])
-        Lb1.insert(5, lines[3])
-        Lb1.insert(6, lines[4])
-        Lb1.insert(7, lines[5])
-        Lb1.insert(8, lines[6])
-        Lb1.insert(9, lines[7])
-        Lb1.insert(10, lines[8])
-        Lb1.insert(11, "Thoi diem trong video: " + "%02d:%02d" % (self.currentTime // 60, self.currentTime % 60))
-        Lb1.pack()
+        descriptionBox = Listbox(top, width=50, height=30)
+        descriptionBox.insert(1, "Describe: ")
+        descriptionBox.insert(2, "Video: " + str(self.fileName))
+        descriptionBox.insert(3, lines[1])
+        descriptionBox.insert(4, lines[2])
+        descriptionBox.insert(5, lines[3])
+        descriptionBox.insert(6, lines[4])
+        descriptionBox.insert(7, lines[5])
+        descriptionBox.insert(8, lines[6])
+        descriptionBox.insert(9, lines[7])
+        descriptionBox.insert(10, lines[8])
+        descriptionBox.insert(11, "Now on: " + "%02d:%02d" % (self.currentTime // 60, self.currentTime % 60))
+        descriptionBox.pack()
 
-    def displayStats(self):
+    def displayStatus(self):
         """Displays observed statistics"""
-        totalPackets = ((self.counter) / (self.countTotalPacket)) * 100
+        rateLoss = ((self.counter) / (self.countTotalPacket)) * 100
         top1 = Toplevel()
         top1.title("Statistics")
         top1.geometry('300x170')
-        Lb2 = Listbox(top1, width=80, height=20)
-        Lb2.insert(1, "Current Packets No.%d " % self.frameNbr)
-        Lb2.insert(2, "Total Streaming Packets: %d packets" % self.countTotalPacket)
-        Lb2.insert(3, "Packets Received: %d packets" % self.packets)
-        Lb2.insert(4, "Packets Lost: %d packets" % self.counter)
-        Lb2.insert(5, "Packet Loss Rate: %d%%" % totalPackets)
-        Lb2.insert(6, "Play time: %.2f seconds" % self.timer)
-        Lb2.insert(7, "Bytes received: %d bytes" % self.bytes)
-        Lb2.insert(8, "Video Data Rate: %d bytes per second" % (self.bytes / self.timer))
-        Lb2.insert(9, "Total Jitter: %.3fms" % (self.totalJitter * 1000))
-        Lb2.insert(10, "Average Jitter: %.3fms" % ((self.totalJitter / self.packets ) * 1000))
-        Lb2.pack()
-        # top1.mainloop()
+        statusBox = Listbox(top1, width=80, height=20)
+        statusBox.insert(1, "Current Packets No.%d " % self.frameNbr)
+        statusBox.insert(2, "Total Streaming Packets: %d packets" % self.countTotalPacket)
+        statusBox.insert(3, "Packets Received: %d packets" % self.packets)
+        statusBox.insert(4, "Packets Lost: %d packets" % self.counter)
+        statusBox.insert(5, "Packet Loss Rate: %d%%" % rateLoss)
+        statusBox.insert(6, "Play time: %.2f seconds" % self.timer)
+        statusBox.insert(7, "Bytes received: %d bytes" % self.bytes)
+        statusBox.insert(8, "Video Data Rate: %d bytes per second" % (self.bytes / self.timer))
+        statusBox.pack()
 
 
