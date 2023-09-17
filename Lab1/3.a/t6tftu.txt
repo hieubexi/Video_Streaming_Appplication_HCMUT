@@ -1,0 +1,21 @@
+front end: <20 screen 2 Hiếu
+			+ H.Hiếu: Figma 20/3
+			+ T.Hiếu: làm layout, gõ HTML <3 tuần> 27/3
+				tuần thứ 3:
+				Css
+			+ login/log out sign up
+			+ home
+			+ 3 feature
+
+back end: Hào
+			+ php <2 tuần> 20/3
+			+ mySql <app>
+: component
+: layout
+
+Git
+	1 folder Source code:		
+			page1....html
+			page2....html
+			style.css
+			script.jv

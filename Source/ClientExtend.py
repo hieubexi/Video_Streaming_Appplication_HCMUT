@@ -22,10 +22,14 @@ class ClientExtend:
     DESCRIBE = 4
     FORWARD = 5
     PREV= 6
+    SWITCH = 7
+    PREVIOUS = 9
+    NEXT = 10
 
     checkSocketIsOpen = False
     checkPlay = False
     isFirstPlay= True
+    videoIndex = 0
     counter = 0
 
     # Initiation..
@@ -62,7 +66,7 @@ class ClientExtend:
         self.lastSequence = 0
         self.arrivalTimeofPreviousPacket = 0
         self.lastPacketSpacing = 0
-        
+        self.videoIndex = 0
 
         #self.setupMovie()
 
@@ -75,7 +79,7 @@ class ClientExtend:
         self.start["fg"] = "beige"
         self.start['font'] = font.Font(size = 10)
         self.start["command"] = self.playMovie
-        self.start.grid(row=2, column=0, padx=2, pady=2)
+        self.start.grid(row=3, column=0, padx=2, pady=2)
 
         # Create Pause button
         self.pause = Button(self.master, width=15, padx=3, pady=3)
@@ -84,7 +88,7 @@ class ClientExtend:
         self.pause["fg"] = "beige"
         self.pause['font'] = font.Font(size = 10)
         self.pause["command"] = self.pauseMovie
-        self.pause.grid(row=2, column=1, padx=2, pady=2)
+        self.pause.grid(row=3, column=1, padx=2, pady=2)
 
         # Create Teardown button
         self.reset = Button(self.master, width=15, padx=3, pady=3)
@@ -93,7 +97,7 @@ class ClientExtend:
         self.reset["bg"]= "#41644A"
         self.reset["fg"] = "beige"
         self.reset['font'] = font.Font(size = 10)
-        self.reset.grid(row=2, column=2, padx=2, pady=2)
+        self.reset.grid(row=3, column=2, padx=2, pady=2)
 
         # Create Setup button
         self.describe = Button(self.master, width=15, padx=3, pady=3)
@@ -103,7 +107,7 @@ class ClientExtend:
         self.describe["fg"] = "beige"
         self.describe['font'] = font.Font(size = 10)
         self.describe["state"] = "disabled"
-        self.describe.grid(row=2, column=3, padx=2, pady=2)
+        self.describe.grid(row=3, column=3, padx=2, pady=2)
 
         # Create a label to display the movie
         self.label = Label(self.master, height=18, bg= color_bg)
@@ -119,21 +123,40 @@ class ClientExtend:
         self.remainTimeBox.grid(row=1, column=0, columnspan=1, padx=5, pady=5)
 
         # Create forward button
-        self.forward = Button(self.master, width=15, padx=3, pady=3, bg= "#E96479", fg= "black")
+        self.forward = Button(self.master, width=15, padx=3, pady=3, bg= "#A84448", fg= "black")
         self.forward["text"] = "⏩"
         self.forward["command"] = self.forwardMovies
         self.forward["state"] = "disabled"
-        self.forward.grid(row=1, column=2, padx=2, sticky= E + W, pady=2)
+        self.forward.grid(row=2, column=2, padx=2, sticky= E + W, pady=2)
 
         # Create backward button
-        self.backward = Button(self.master, width=15, padx=3, pady=3, bg= "#E96479", fg= "black")
+        self.backward = Button(self.master, width=15, padx=3, pady=3, bg= "#A84448", fg= "black")
         self.backward["text"] = "⏪"
         self.backward["command"] = self.prevMovie
         self.backward["state"] = "disabled"
-        self.backward.grid(row=1, column=1, sticky = E + W, padx=2, pady=2)
+        self.backward.grid(row=2, column=1, sticky = E + W, padx=2, pady=2)
+
+        #Create before button 
+        self.previous = Button(self.master, width=15, padx=3, pady=3, bg= "#A84448", fg= "black")
+        self.previous["text"] = "Previous"
+        self.previous["command"] = self.backMovie
+        self.previous["state"] = "disabled"
+        self.previous.grid(row=2, column=0,sticky = E + W, padx=2, pady=2)
+
+        #Create before button 
+        self.next = Button(self.master, width=15, padx=3, pady=3, bg= "#A84448", fg= "black")
+        self.next["text"] = "Next"
+        self.next["command"] = self.nextMovie
+        self.next["state"] = "disabled"
+        self.next.grid(row=2, column=3,sticky = E + W, padx=2, pady=2)
 
 
 
+    def backMovie(self):
+        self.sendRtspRequest(self.PREVIOUS)
+
+    def nextMovie(self):
+        self.sendRtspRequest(self.NEXT)
     def describeMovie(self):
         """Describe button handler"""
         self.sendRtspRequest(self.DESCRIBE)
